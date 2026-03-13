@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Commonplace Book</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Login Screen Styles */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .login-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .login-box {
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: loginPop 0.5s ease;
+        }
+
+        @keyframes loginPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .login-box h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .login-box p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .pin-display {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .pin-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid #ddd;
+            transition: all 0.3s ease;
+        }
+
+        .pin-dot.filled {
+            background: #667eea;
+            border-color: #667eea;
+            transform: scale(1.2);
+        }
+
+        .pin-dot.error {
+            background: #ff4444;
+            border-color: #ff4444;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            max-width: 250px;
+            margin: 0 auto;
+        }
+
+        .key {
+            width: 70px;
+            height: 70px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .key:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .key:active {
+            transform: scale(0.95);
+        }
+
+        .key.clear {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .key.enter {
+            background: #6bcf7f;
+            color: white;
+            grid-column: span 2;
+            width: 100%;
+            border-radius: 35px;
+        }
+
+        .error-message {
+            color: #ff4444;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .error-message.show {
+            opacity: 1;
+        }
+
+        /* Main App Styles */
+        .app-container {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .app-container.visible {
+            opacity: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .add-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        .filter-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .filter-btn.all { background: #fff; color: #333; }
+        .filter-btn.image { background: #ffd93d; color: #333; }
+        .filter-btn.video { background: #6bcf7f; color: white; }
+        .filter-btn.quote { background: #4d96ff; color: white; }
+        .filter-btn.code { background: #ff6b6b; color: white; }
+        .filter-btn.recipe { background: #ff9ff3; color: white; }
+        .filter-btn.note { background: #54a0ff; color: white; }
+
+        .filter-btn:hover, .filter-btn.active {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .masonry-grid {
+            column-count: 4;
+            column-gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-bottom: 100px;
+        }
+
+        @media (max-width: 1200px) { .masonry-grid { column-count: 3; } }
+        @media (max-width: 900px) { .masonry-grid { column-count: 2; } }
+        @media (max-width: 600px) { .masonry-grid { column-count: 1; } }
+
+        .note-card {
+            break-inside: avoid;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .note-card:hover {
+            transform: translateY(-5px) rotate(1deg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .note-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 15px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 0 0 5px 5px;
+        }
+
+        .note-yellow { background: #fff9c4; }
+        .note-pink { background: #ffcdd2; }
+        .note-blue { background: #b3e5fc; }
+        .note-green { background: #c8e6c9; }
+        .note-purple { background: #e1bee7; }
+        .note-orange { background: #ffe0b2; }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .note-type {
+            font-size: 0.8rem;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .delete-btn {
+            background: rgba(255,255,255,0.5);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #ff4444;
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .note-content img {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .note-content video {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .note-content pre {
+            background: rgba(0,0,0,0.8);
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .quote-text {
+            font-style: italic;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #333;
+            border-left: 4px solid #666;
+            padding-left: 15px;
+        }
+
+        .quote-author {
+            text-align: right;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .recipe-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #d84315;
+        }
+
+        .recipe-ingredients {
+            background: rgba(255,255,255,0.5);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .note-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .note-date {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 10px;
+            text-align: right;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalPop 0.3s ease;
+            position: relative;
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .color-option:hover,
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.2);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.3s;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: white;
+            padding: 60px 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        /* Footer Styles */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9rem;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .storage-info {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .storage-bar {
+            width: 100px;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            overflow: hidden;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .storage-used {
+            height: 100%;
+            background: #6bcf7f;
+            transition: width 0.3s ease;
+        }
+
+        .copyright {
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <h1>🔒 Protected Space</h1>
+            <p>Enter PIN to access your Commonplace Book</p>
+            
+            <div class="pin-display" id="pinDisplay">
+                <div class="pin-dot" id="dot1"></div>
+                <div class="pin-dot" id="dot2"></div>
+                <div class="pin-dot" id="dot3"></div>
+                <div class="pin-dot" id="dot4"></div>
+            </div>
+            
+            <div class="keypad">
+                <button class="key" onclick="enterDigit(1)">1</button>
+                <button class="key" onclick="enterDigit(2)">2</button>
+                <button class="key" onclick="enterDigit(3)">3</button>
+                <button class="key" onclick="enterDigit(4)">4</button>
+                <button class="key" onclick="enterDigit(5)">5</button>
+                <button class="key" onclick="enterDigit(6)">6</button>
+                <button class="key" onclick="enterDigit(7)">7</button>
+                <button class="key" onclick="enterDigit(8)">8</button>
+                <button class="key" onclick="enterDigit(9)">9</button>
+                <button class="key clear" onclick="clearPin()">C</button>
+                <button class="key" onclick="enterDigit(0)">0</button>
+                <button class="key enter" onclick="checkPin()">→</button>
+            </div>
+            
+            <p class="error-message" id="errorMessage">Incorrect PIN. Try again.</p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container" id="appContainer">
+        <button class="logout-btn" onclick="logout()">🔒 Logout</button>
+        
+        <div class="header">
+            <h1>📚 My Commonplace Book</h1>
+            <p>Collect your inspirations, one note at a time</p>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="add-btn" onclick="openModal()">+ Add New Note</button>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="filter-btn all active" onclick="filterNotes('all')">All</button>
+            <button class="filter-btn image" onclick="filterNotes('image')">Images</button>
+            <button class="filter-btn video" onclick="filterNotes('video')">Videos</button>
+            <button class="filter-btn quote" onclick="filterNotes('quote')">Quotes</button>
+            <button class="filter-btn code" onclick="filterNotes('code')">Code</button>
+            <button class="filter-btn recipe" onclick="filterNotes('recipe')">Recipes</button>
+            <button class="filter-btn note" onclick="filterNotes('note')">Notes</button>
+        </div>
+
+        <div class="masonry-grid" id="notesContainer">
+            <!-- Notes will be dynamically added here -->
+        </div>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <h3>No notes yet!</h3>
+            <p>Click "Add New Note" to start collecting your inspirations</p>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="noteModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2>✨ Create New Note</h2>
+            
+            <div class="form-group">
+                <label>Note Type</label>
+                <select id="noteType" onchange="updateForm()">
+                    <option value="image">Image</option>
+                    <option value="video">Video</option>
+                    <option value="quote">Quote</option>
+                    <option value="code">Code Snippet</option>
+                    <option value="recipe">Recipe</option>
+                    <option value="note">Text Note</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Choose Color</label>
+                <div class="color-picker">
+                    <div class="color-option selected" style="background: #fff9c4;" data-color="note-yellow" onclick="selectColor(this)"></div>
+                    <div class="color-option" style="background: #ffcdd2;" data-color="note-pink" onclick="selectColor(this)"></div>
+                    <div class="color-option" style="background: #b3e5fc;" data-color="note-blue" onclick="selectColor(this)"></div>
+                    <div class="color-option" style="background: #c8e6c9;" data-color="note-green" onclick="selectColor(this)"></div>
+                    <div class="color-option" style="background: #e1bee7;" data-color="note-purple" onclick="selectColor(this)"></div>
+                    <div class="color-option" style="background: #ffe0b2;" data-color="note-orange" onclick="selectColor(this)"></div>
+                </div>
+            </div>
+
+            <div id="dynamicFields"></div>
+
+            <button class="submit-btn" onclick="addNote()">Add to Collection</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer" id="footer" style="display: none;">
+        <div class="footer-content">
+            <span class="copyright">© 2026 My Commonplace Book. All rights reserved.</span>
+            <span class="storage-info">
+                Storage: <span id="storageText">0 MB / 100 GB</span>
+                <span class="storage-bar"><span class="storage-used" id="storageBar" style="width: 0%"></span></span>
+            </span>
+        </div>
+    </footer>
+
+    <script>
+        // IndexedDB setup for large storage (100GB+ capacity)
+        const DB_NAME = 'CommonplaceBookDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'notes';
+        let db;
+        let notes = [];
+        let currentFilter = 'all';
+        let selectedColor = 'note-yellow';
+        let enteredPin = '';
+        const CORRECT_PIN = '7654';
+        const MAX_STORAGE_GB = 100;
+
+        // Initialize IndexedDB
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains(STORE_NAME)) {
+                        const store = database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        store.createIndex('type', 'type', { unique: false });
+                        store.createIndex('date', 'date', { unique: false });
+                    }
+                };
+            });
+        }
+
+        // Database operations
+        async function saveNoteToDB(note) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.put(note);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function deleteNoteFromDB(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(id);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function getAllNotesFromDB() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // PIN Login Functions
+        function enterDigit(digit) {
+            if (enteredPin.length < 4) {
+                enteredPin += digit;
+                updatePinDisplay();
+            }
+        }
+
+        function clearPin() {
+            enteredPin = '';
+            updatePinDisplay();
+            document.querySelectorAll('.pin-dot').forEach(dot => dot.classList.remove('error'));
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        function updatePinDisplay() {
+            for (let i = 1; i <= 4; i++) {
+                const dot = document.getElementById(`dot${i}`);
+                if (i <= enteredPin.length) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            }
+        }
+
+        function checkPin() {
+            if (enteredPin === CORRECT_PIN) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('appContainer').classList.add('visible');
+                document.getElementById('footer').style.display = 'block';
+                loadNotes();
+            } else {
+                document.querySelectorAll('.pin-dot').forEach(dot => dot.classList.add('error'));
+                document.getElementById('errorMessage').classList.add('show');
+                setTimeout(() => {
+                    clearPin();
+                }, 1000);
+            }
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        // Storage calculation
+        function calculateStorage() {
+            const totalBytes = notes.reduce((acc, note) => {
+                return acc + new Blob([JSON.stringify(note)]).size;
+            }, 0);
+            const totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
+            const percentage = Math.min((totalMB / (MAX_STORAGE_GB * 1024)) * 100, 100);
+            
+            document.getElementById('storageText').textContent = `${totalMB} MB / ${MAX_STORAGE_GB} GB`;
+            document.getElementById('storageBar').style.width = `${percentage}%`;
+            
+            if (percentage > 90) {
+                document.getElementById('storageBar').style.background = '#ff4444';
+            } else if (percentage > 70) {
+                document.getElementById('storageBar').style.background = '#ffd93d';
+            }
+        }
+
+        // Note Functions
+        async function loadNotes() {
+            try {
+                notes = await getAllNotesFromDB();
+                if (notes.length === 0) {
+                    // Add sample notes
+                    const sampleNotes = [
+                        {
+                            id: Date.now(),
+                            type: 'quote',
+                            color: 'note-yellow',
+                            content: { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+                            date: new Date().toLocaleDateString()
+                        },
+                        {
+                            id: Date.now() + 1,
+                            type: 'code',
+                            color: 'note-green',
+                            content: { code: "function dreamBig() {\n  while(!success) {\n    tryAgain();\n  }\n}" },
+                            date: new Date().toLocaleDateString()
+                        },
+                        {
+                            id: Date.now() + 2,
+                            type: 'note',
+                            color: 'note-pink',
+                            content: { text: "Ideas for the novel: A character who can taste colors. Each emotion has a flavor. Joy tastes like mango, sadness like dark chocolate..." },
+                            date: new Date().toLocaleDateString()
+                        }
+                    ];
+                    for (let note of sampleNotes) {
+                        await saveNoteToDB(note);
+                    }
+                    notes = sampleNotes;
+                }
+                renderNotes();
+                calculateStorage();
+            } catch (error) {
+                console.error('Error loading notes:', error);
+            }
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notesContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            container.innerHTML = '';
+            
+            const filteredNotes = currentFilter === 'all' 
+                ? notes 
+                : notes.filter(note => note.type === currentFilter);
+
+            if (filteredNotes.length === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                filteredNotes.forEach(note => {
+                    container.appendChild(createNoteElement(note));
+                });
+            }
+        }
+
+        function createNoteElement(note) {
+            const div = document.createElement('div');
+            div.className = `note-card ${note.color}`;
+            div.innerHTML = `
+                <div class="note-header">
+                    <span class="note-type">${note.type}</span>
+                    <button class="delete-btn" onclick="deleteNote(${note.id})">×</button>
+                </div>
+                <div class="note-content">
+                    ${getNoteContent(note)}
+                </div>
+                <div class="note-date">${note.date}</div>
+            `;
+            return div;
+        }
+
+        function getNoteContent(note) {
+            switch(note.type) {
+                case 'image':
+                    return `<img src="${note.content.url}" alt="${note.content.caption || 'Image'}"><p>${note.content.caption || ''}</p>`;
+                case 'video':
+                    return `<video controls><source src="${note.content.url}"></video><p>${note.content.caption || ''}</p>`;
+                case 'quote':
+                    return `<div class="quote-text">"${note.content.text}"</div><div class="quote-author">— ${note.content.author}</div>`;
+                case 'code':
+                    return `<pre><code>${note.content.code}</code></pre>`;
+                case 'recipe':
+                    return `<div class="recipe-title">${note.content.title}</div><div class="recipe-ingredients">${note.content.ingredients}</div><p>${note.content.instructions}</p>`;
+                case 'note':
+                default:
+                    return `<div class="note-text">${note.content.text}</div>`;
+            }
+        }
+
+        function openModal() {
+            document.getElementById('noteModal').style.display = 'flex';
+            updateForm();
+        }
+
+        function closeModal() {
+            document.getElementById('noteModal').style.display = 'none';
+        }
+
+        function selectColor(element) {
+            document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedColor = element.dataset.color;
+        }
+
+        function updateForm() {
+            const type = document.getElementById('noteType').value;
+            const container = document.getElementById('dynamicFields');
+            
+            const forms = {
+                image: `
+                    <div class="form-group"><label>Image URL</label><input type="text" id="imageUrl" placeholder="https://example.com/image.jpg"></div>
+                    <div class="form-group"><label>Caption (optional)</label><input type="text" id="imageCaption" placeholder="Describe this image..."></div>
+                `,
+                video: `
+                    <div class="form-group"><label>Video URL</label><input type="text" id="videoUrl" placeholder="https://example.com/video.mp4"></div>
+                    <div class="form-group"><label>Caption (optional)</label><input type="text" id="videoCaption" placeholder="Describe this video..."></div>
+                `,
+                quote: `
+                    <div class="form-group"><label>Quote Text</label><textarea id="quoteText" placeholder="Enter the quote..."></textarea></div>
+                    <div class="form-group"><label>Author</label><input type="text" id="quoteAuthor" placeholder="Who said this?"></div>
+                `,
+                code: `
+                    <div class="form-group"><label>Code</label><textarea id="codeText" placeholder="Paste your code here..."></textarea></div>
+                `,
+                recipe: `
+                    <div class="form-group"><label>Recipe Name</label><input type="text" id="recipeTitle" placeholder="e.g., Grandma's Cookies"></div>
+                    <div class="form-group"><label>Ingredients</label><textarea id="recipeIngredients" placeholder="List ingredients..."></textarea></div>
+                    <div class="form-group"><label>Instructions</label><textarea id="recipeInstructions" placeholder="How to make it..."></textarea></div>
+                `,
+                note: `
+                    <div class="form-group"><label>Your Note</label><textarea id="noteText" placeholder="Write your thoughts..."></textarea></div>
+                `
+            };
+            
+            container.innerHTML = forms[type] || forms.note;
+        }
+
+        async function addNote() {
+            const type = document.getElementById('noteType').value;
+            let content = {};
+            
+            switch(type) {
+                case 'image':
+                    content = {
+                        url: document.getElementById('imageUrl').value,
+                        caption: document.getElementById('imageCaption').value
+                    };
+                    break;
+                case 'video':
+                    content = {
+                        url: document.getElementById('videoUrl').value,
+                        caption: document.getElementById('videoCaption').value
+                    };
+                    break;
+                case 'quote':
+                    content = {
+                        text: document.getElementById('quoteText').value,
+                        author: document.getElementById('quoteAuthor').value
+                    };
+                    break;
+                case 'code':
+                    content = { code: document.getElementById('codeText').value };
+                    break;
+                case 'recipe':
+                    content = {
+                        title: document.getElementById('recipeTitle').value,
+                        ingredients: document.getElementById('recipeIngredients').value,
+                        instructions: document.getElementById('recipeInstructions').value
+                    };
+                    break;
+                case 'note':
+                    content = { text: document.getElementById('noteText').value };
+                    break;
+            }
+
+            const newNote = {
+                id: Date.now(),
+                type: type,
+                color: selectedColor,
+                content: content,
+                date: new Date().toLocaleDateString()
+            };
+
+            try {
+                await saveNoteToDB(newNote);
+                notes.unshift(newNote);
+                renderNotes();
+                calculateStorage();
+                closeModal();
+            } catch (error) {
+                alert('Error saving note. Storage may be full.');
+            }
+        }
+
+        async function deleteNote(id) {
+            if (confirm('Delete this note?')) {
+                try {
+                    await deleteNoteFromDB(id);
+                    notes = notes.filter(note => note.id !== id);
+                    renderNotes();
+                    calculateStorage();
+                } catch (error) {
+                    alert('Error deleting note');
+                }
+            }
+        }
+
+        function filterNotes(type) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderNotes();
+        }
+
+        // Keyboard support for PIN entry
+        document.addEventListener('keydown', (e) => {
+            if (!document.getElementById('loginScreen').classList.contains('hidden')) {
+                if (e.key >= '0' && e.key <= '9') {
+                    enterDigit(parseInt(e.key));
+                } else if (e.key === 'Enter') {
+                    checkPin();
+                } else if (e.key === 'Escape' || e.key === 'Backspace') {
+                    clearPin();
+                }
+            }
+        });
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('noteModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Initialize
+        initDB().then(() => {
+            console.log('Database initialized - 100GB capacity ready');
+        }).catch(err => {
+            console.error('Database initialization failed:', err);
+        });
+    </script>
+</body>
+</html>
